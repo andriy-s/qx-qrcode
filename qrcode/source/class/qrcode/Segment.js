@@ -65,7 +65,10 @@ qx.Class.define("qrcode.Segment",
     }
 
     if(!unicode) {
-      this.__data = str;
+      this.__data = Array(str.length);
+      for(i = 0; i < str.length; i++) {
+        this.__data[i] = str.charCodeAt(i);
+      }
     }
     else {
       this.__data = [];
