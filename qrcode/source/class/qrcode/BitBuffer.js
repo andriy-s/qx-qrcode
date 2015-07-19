@@ -12,15 +12,17 @@ qx.Class.define("qrcode.BitBuffer",
 
     this.__data = new Array(/*len*/);
     this.__bitsLeft = 0;
+  },
 
-    this.__masks = [ 0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff ];
+  statics :
+  {
+    __masks : [ 0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff ]
   },
 
   members :
   {
     __data : null,
     __bitsLeft : null,
-    __masks : null,
 
     append : function(val, numBits, valLen) {
       var idx, n;
@@ -39,7 +41,7 @@ qx.Class.define("qrcode.BitBuffer",
         }
 
         n = Math.min(numBits, this.__bitsLeft);
-        this.__data[idx] |= ((val >> (valLen - n)) & this.__masks[n]) << (this.__bitsLeft - n);
+        this.__data[idx] |= ((val >> (valLen - n)) & qrcode.BitBuffer.__masks[n]) << (this.__bitsLeft - n);
         this.__bitsLeft -= n;
         numBits -= n;
         valLen -= n;
