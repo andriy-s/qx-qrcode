@@ -321,26 +321,37 @@ qx.Class.define("qrcode.QRCode",
       return scale * (this.getSymbolSize() + 8); // + 2x margins
     },
 
-    draw : function(ctx, scale) {
-      var i, x, y, margin;
+    draw : function(ctx, options) {
+      var i, x, y, marginLeft, marginTop;
 
-      scale = scale || 2;
+      if (options === undefined) {
+        options = {};
+      }
+
+      options.scale = options.scale || 2;
+      options.left = options.left || 0;
+      options.top = options.top || 0;
+      options.light = options.light || "#FFF";
+      options.dark = options.dark || "#000";
 
       if(!this.__symbol) {
         this.__encodeSymbol();
       }
 
-      x = this.getImageSize(scale);
-      ctx.fillStyle = "#FFF";
-      ctx.fillRect(0, 0, x, x);
-      ctx.fillStyle = "#000";
+      x = this.getImageSize(options.scale);
+      ctx.fillStyle = options.light;
+      ctx.fillRect(options.left, options.top, x, x);
+      ctx.fillStyle = options.dark;
 
       i = 0;
-      margin = 4 * scale;
+      marginLeft = options.left + 4 * options.scale;
+      marginTop = options.top + 4 * options.scale;
       for (y = 0; y < this.__symbolSize; y++) {
         for (x = 0; x < this.__symbolSize; x++) {
           if(this.__symbol[i++]) {
-            ctx.fillRect(margin + x*scale, margin + y*scale, scale, scale);
+            ctx.fillRect(
+              marginLeft + x * options.scale, marginTop + y * options.scale,
+              options.scale, options.scale);
           }
         }
       }
