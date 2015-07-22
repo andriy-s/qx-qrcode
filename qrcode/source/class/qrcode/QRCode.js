@@ -366,7 +366,8 @@ qx.Class.define("qrcode.QRCode",
       for(ver = 1; ver <= 40; ver++) {
         len = 0;
         for(i = 0; i < this.__segments.length; i++) {
-          len += this.__segments[i].getBitStreamLength(ver);
+          this.__segments[i].setVersion(ver);
+          len += this.__segments[i].getBitStreamLength();
         }
         dataBits = 8 * qrcode.QRCode.__codeProps[this.__ecLevel][ver-1][0];
         if(len <= dataBits) {

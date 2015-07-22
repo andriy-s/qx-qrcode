@@ -139,12 +139,8 @@ qx.Class.define("qrcode.Segment",
       }
     },
 
-    getBitStreamLength : function(version) {
+    getBitStreamLength : function() {
       var len;
-
-      if(version) {
-        this.setVersion(version);
-      }
 
       if(this.__mode == 0) {
         len = 10 * Math.floor(this.__data.length / 3);
@@ -175,7 +171,7 @@ qx.Class.define("qrcode.Segment",
 
           sym = 0;
           for(i = 0; i < this.__data.length; i++) {
-            sym = sym * 10 + this.__data.charCodeAt(i) - 0x30;
+            sym = sym * 10 + this.__data[i] - 0x30;
             if((i % 3) == 2) {
               buffer.append(sym, 10);
               sym = 0;
@@ -195,7 +191,7 @@ qx.Class.define("qrcode.Segment",
 
           sym = 0;
           for(i = 0; i < this.__data.length; i++) {
-            sym = sym * 45 + clazz.__alphaNumSet[this.__data.charCodeAt(i)];
+            sym = sym * 45 + clazz.__alphaNumSet[this.__data[i]];
             if(i & 0x1) {
               buffer.append(sym, 11);
               sym = 0;
