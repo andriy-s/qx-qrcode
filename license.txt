@@ -1,0 +1,22 @@
+Licensing Information
+=====================
+
+This QR Code generator library is dual-licensed and may be used under the
+terms of either the:
+
+  * GNU Lesser General Public License (LGPL) version 2.1
+    https://www.gnu.org/licenses/lgpl-2.1.txt
+
+or the
+
+  * Eclipse Public License (EPL)
+    https://www.eclipse.org/org/documents/epl-v10.html
+
+
+As a recipient of this package, you may choose which license to receive this
+code under (except as noted in per-module LICENSE files).
+
+The full text of the LGPL and EPL licenses is provided in the lgpl-2.1.txt
+and epl-1.0.txt files respectively.
+
+=====================

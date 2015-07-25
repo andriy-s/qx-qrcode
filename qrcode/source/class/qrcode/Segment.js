@@ -1,10 +1,35 @@
+/* ************************************************************************
 
-// TODO: Add ability to force Unicode somehow
-//       If one segment is in Unicode, the rest should be Unicode too
+   QR Code Generator Library
 
+   Copyright:
+     2015 Andriy Syrovenko
+
+   This project is dual-licensed under the terms of either:
+
+     * GNU Lesser General Public License (LGPL) version 2.1
+
+     * Eclipse Public License (EPL)
+
+     See the license.txt file in the project's top-level directory for details.
+
+   Authors:
+     Andriy Syrovenko
+
+************************************************************************ */
+
+/**
+ * This class represents a QR Code Segment, i.e. a sequence of input data
+ * encoded according to the rules of one encoding mode. Only Numeric,
+ * Alphanumeric and Byte encoding modes are currently supported. Data in
+ * byte mode is encoded in either ISO-8859-1 or UTF-8.
+ *
+ * @internal
+ */
 qx.Class.define("qrcode.Segment",
 {
   extend : qx.core.Object,
+
 
   statics :
   {
@@ -16,8 +41,17 @@ qx.Class.define("qrcode.Segment",
     ]
   },
 
+
+  /**
+   * Creates a new instance of <code>Segment</code>
+   *
+   * @param str {String} A data to be encoded
+   */
   construct : function(str)
   {
+    // TODO: Add ability to force Unicode somehow
+    //       If one segment is in Unicode, the rest should be Unicode too
+
     var clazz = qrcode.Segment;
     var c, c1, i, unicode;
 
@@ -120,12 +154,19 @@ qx.Class.define("qrcode.Segment",
     this.setVersion(1);
   },
 
+
   members :
   {
     __data : null,
     __charCountBits : null,
     __mode : null,
 
+
+    /**
+     * Sets the target QR Symbol version
+     *
+     * @param version {Integer?} QR Symbol version. 
+     */
     setVersion : function(version) {
       var clazz = qrcode.Segment;
       if(version <= 9) {
@@ -139,6 +180,13 @@ qx.Class.define("qrcode.Segment",
       }
     },
 
+
+    /**
+     * Calculates the length in bits of the segment data encoded according
+     * to the selected encoding mode and QR Symbol version.
+     *
+     * @return {Integer} Data length in bits
+     */
     getBitStreamLength : function() {
       var len;
 
@@ -160,6 +208,14 @@ qx.Class.define("qrcode.Segment",
       return len + this.__charCountBits + 4;
     },
 
+
+    /**
+     * Encodes segment data into a stream of bits in accordnace with the rules
+     * of the selected encoding mode and QR Symbol version.
+     *
+     * @param buffer {qrcode.BitBuffer} A buffer the resulting bit stream
+     *   should be written to
+     */
     encode : function(buffer) {
       var clazz = qrcode.Segment;
       var i, sym;

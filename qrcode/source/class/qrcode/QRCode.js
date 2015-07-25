@@ -1,7 +1,46 @@
+/* ************************************************************************
+
+   QR Code Generator Library
+
+   Copyright:
+     2015 Andriy Syrovenko
+
+   This project is dual-licensed under the terms of either:
+
+     * GNU Lesser General Public License (LGPL) version 2.1
+
+     * Eclipse Public License (EPL)
+
+     See the license.txt file in the project's top-level directory for details.
+
+   Authors:
+     Andriy Syrovenko
+
+************************************************************************ */
+
+/**
+ * A QR Code generator class.
+ *
+ * Provides a way to encode a QR symbol and draw it on an HTML5 canvas.
+ * Supports adding several data segments to a single QR symbol. When adding a
+ * new segment it is automatically analyzed and the most space-efficient encoding
+ * mode is chosen. Currently only Numeric, Alphanumeric and Byte encoding modes
+ * are supported.
+ */
 qx.Class.define("qrcode.QRCode",
 {
   extend : qx.core.Object,
 
+
+  /**
+   * Creates a new instance of <code>QRCode</code>.
+   *
+   * @param str {String?} Data to be encoded in the QR symbol. If present, one
+   *   segment is automatically added to the newly created <code>QRCode</code> instance.
+   *   See {@link #addSegment}.
+   * @param ecLevel {String?"M"} Error correction level. See {@link #ecLevel}.
+   *   
+   */
   construct : function(str, ecLevel)
   {
     var clazz = qrcode.QRCode;
@@ -16,6 +55,10 @@ qx.Class.define("qrcode.QRCode",
     this.initEcLevel(ecLevel || 'M');
 
     if(!clazz.__rs_exp_tbl) {
+      /*
+       * Calculating Galois field GF(2^8) logarithm and anti-log tables.
+       * See: https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders
+       */
       clazz.__rs_exp_tbl = new Array(512);
       clazz.__rs_log_tbl = new Array(256);
 
@@ -37,6 +80,7 @@ qx.Class.define("qrcode.QRCode",
       }
     }
   },
+
 
   statics :
   {
@@ -274,10 +318,22 @@ qx.Class.define("qrcode.QRCode",
     __penaltySequence : [ 1, 0, 1, 1, 1, 0, 1 ]
   },
 
+
   properties :
   {
+    /**
+     * Property holding the Reed-Solomon error correction level.
+     *
+     * <ul>
+     *   <li>L - allows recovery of 7% of symbol codewords</li>
+     *   <li>M - allows recovery of 15% of symbol codewords</li>
+     *   <li>Q - allows recovery of 25% of symbol codewords</li>
+     *   <li>H - allows recovery of 30% of symbol codewords</li>
+     * </ul>
+     */
     ecLevel : { check : ['L', 'M', 'Q', 'H'], apply : "_applyEcLevel"  }
   },
+
 
   members :
   {
@@ -287,15 +343,30 @@ qx.Class.define("qrcode.QRCode",
     __symbolVersion : null,
     __symbolSize : null,
 
+
+    /**
+     * Adds new segment (a sequence of input data). The most space-efficient
+     * encoding mode is automatically selected for each segment. Currently
+     * only Numeric, Alphanumeric and Byte encoding modes are supported. The
+     * data in Byte encoding mode is encoded using ISO-8859-1 character
+     * encoding if possible, and using UTF-8 character encoding otherwise.
+     *
+     * @param str {String} Data to be encoded.
+     */
     addSegment : function(str) {
       this.__segments.push(new qrcode.Segment(str));
       this.__symbol = null;
     },
 
+
+    /**
+     * Clears QR symbol, i.e. removes all previously added segments.
+     */
     clear : function() {
       this.__segments = new Array();
       this.__symbol = null;
     },
+
 
     _applyEcLevel : function(value) {
       switch(value) {
@@ -308,6 +379,12 @@ qx.Class.define("qrcode.QRCode",
       this.__symbol = null;
     },
 
+
+    /**
+     * Returns QR symbol size in modules.
+     *
+     * @return {Integer} A number of modules in the grid along each side.
+     */
     getSymbolSize : function() {
       if(!this.__symbol) {
         this.__encodeSymbol();
@@ -316,11 +393,40 @@ qx.Class.define("qrcode.QRCode",
       return this.__symbolSize;
     },
 
+
+    /**
+     * Returns QR symbol image size in pixels. Image size is calculated by
+     * adding 2x4 margin modules to {@link #getSymbolSize symbol size} and then
+     * multiplying the result by a scale factor.
+     *
+     * @param scale {Integer?2} Scale factor.
+     *
+     * @return {Integer} A size of each side of the image in pixels.
+     */
     getImageSize : function(scale) {
       scale = scale || 2;
       return scale * (this.getSymbolSize() + 8); // + 2x margins
     },
 
+
+    /**
+     * Draws QR symbol image on the HTML5 canvas.
+     *
+     * The image size and appearance may be customized through the optional
+     * <code>options</code> parameter. The following options are supported:
+     *
+     * <ul>
+     *   <li><code>scale</code> - scale factor, i.e. a module size in pixels, the default is 2.</li>
+     *   <li><code>left</code> - horizontal offset of the image, the default is 0.</li>
+     *   <li><code>top</code> - vertical offset of the image. The default is 0.</li>
+     *   <li><code>light</code> - color of the light modules, the default is <code>#FFF</code>.</li>
+     *   <li><code>dark</code> - color of the dark modules, the default is <code>#000</code>.</li>
+     * </ul>
+     *
+     * @param ctx {canvasrenderingcontext2d} A canvas 2D drawing context to draw
+     *   the symbol on.
+     * @param options {Map?} Drawing options.
+     */
     draw : function(ctx, options) {
       var i, x, y, marginLeft, marginTop;
 
@@ -357,12 +463,18 @@ qx.Class.define("qrcode.QRCode",
       }
     },
 
+
+    /**
+     * Encodes segments data and creates QR symbol matrix
+     */
     __encodeSymbol : function() {
       var i, j, m, ver, len, score, symbol, dataBits, dataBytes,
           blockDataBytes, blockECBytes, blockCnt, shortBlockCnt,
           bitBuffer, ecData, extraByte, finalMessage, dataOffset,
           rsGen;
 
+      // Looking for the minimal QR Code version large enough to accomodate
+      //   all segments
       for(ver = 1; ver <= 40; ver++) {
         len = 0;
         for(i = 0; i < this.__segments.length; i++) {
@@ -385,20 +497,21 @@ qx.Class.define("qrcode.QRCode",
       this.__symbolVersion = ver;
       this.__symbolSize = 17 + 4 * ver;
 
+      // Converting segments' data into a bit stream
       bitBuffer = new qrcode.BitBuffer(dataBits);
       for(i = 0; i < this.__segments.length; i++) {
         this.__segments[i].encode(bitBuffer);
       }
       if(bitBuffer.getLength() + 4 <= dataBits) {
-        // Terminator
+        // Adding terminator sequence
         bitBuffer.append(0, 4);
       }
       if(bitBuffer.getLength() & 0x0f) {
-        // Padding to a byte boundary
+        // Zero-padping to a byte boundary
         bitBuffer.append(0, 8 - (bitBuffer.getLength() & 0x0f));
       }
       for(i = dataBits - bitBuffer.getLength(); i > 0; i -= 16) {
-        // Padding pattern
+        // Padding to the full QR symbol length
         bitBuffer.append(0xEC11, Math.min(i, 16), 16);
       }
 
@@ -407,6 +520,8 @@ qx.Class.define("qrcode.QRCode",
       blockDataBytes = Math.floor(dataBytes / blockCnt);
       shortBlockCnt = blockCnt - (dataBytes % blockCnt);
 
+      // Splitting data into the given number of error-correction blocks and
+      //   filling each block with symbol data and error-correction codes
       rsGen = this.__rsCalculateGenerator(blockECBytes);
       dataOffset = 0;
       for(i = 0; i < blockCnt; i++) {
@@ -429,6 +544,7 @@ qx.Class.define("qrcode.QRCode",
         dataOffset += blockDataBytes + extraByte;
       }
 
+      // Building QR symbol matrix and evaluating different mask patterns
       score = -1;
       for(i = 0; i < 8; i++) {
         symbol = this.__buildSymbol(finalMessage, i);
@@ -440,9 +556,20 @@ qx.Class.define("qrcode.QRCode",
         }
       }
 
+      // Adding format and version information to the matrix
       this.__fillReservedAreas(this.__symbol, m);
     },
 
+
+    /**
+     * Fills in QR symbol matrix with data codewords, finder, timing and
+     * alignment patterns, separators and reserved areas.
+     *
+     * @param message {Integer[]} Array of data codewords
+     * @param maskPattern {Integer} Mask pattern index
+     *
+     * @return {Integer[]} QR symbol matrix
+     */
     __buildSymbol : function(message, maskPattern) {
       var i, j, x, y, bit, dir, p, symbol, maskFunc;
 
@@ -552,6 +679,13 @@ qx.Class.define("qrcode.QRCode",
       return symbol;
     },
 
+
+    /**
+     * Adds format and version information to the QR symbol matrix
+     *
+     * @param symbol {Integer[]} QR symbol matrix
+     * @param maskPattern {Integer} Mask pattern index
+     */
     __fillReservedAreas : function(symbol, maskPattern) {
       var i, j, code;
 
@@ -587,15 +721,47 @@ qx.Class.define("qrcode.QRCode",
       }
     },
 
+
+    /**
+     * Finder pattern generating function
+     *
+     * @param x {Integer} The horizontal offset of the module inside the pattern
+     * @param y {Integer} The vertical offset of the module inside the pattern
+     *
+     * @return {Boolean} <code>true</code> if the given module is dark, <code>false</code>
+     *   otherwise
+     */
     __finderPattern : function(x, y) {
       return (x == 0 || x == 6 || y == 0 || y == 6)  // Black if black border ...
           || (x != 1 && x != 5 && y != 1 && y != 5); // ... or not white frame
     },
 
+
+
+    /**
+     * Alignment pattern generating function
+     *
+     * @param x {Integer} The horizontal offset of the module inside the pattern
+     * @param y {Integer} The vertical offset of the module inside the pattern
+     *
+     * @return {Boolean} <code>true</code> if the given module is dark, <code>false</code>
+     *   otherwise
+     */
     __alignmentPattern : function(x, y) {
       return x == 0 || x == 4 || y == 0 || y == 4 || (x == 2 && y == 2);
     },
 
+
+    /**
+     * Creates pattern on the QR symbol matrix
+     *
+     * @param symbol {Integer[]} QR symbol matrix
+     * @param pattern {Function} Pattern generating function
+     * @param x {Integer} The horizontal offset of the pattern inside the matrix
+     * @param y {Integer} The vertical offset of the pattern inside the matrix
+     * @param size {Integer} The size of each side of the pattern
+     *
+     */
     __createPattern : function(symbol, pattern, x, y, size) {
       var i = y * this.__symbolSize + x;
       for(y = 0; y < size; y++) {
@@ -606,6 +772,18 @@ qx.Class.define("qrcode.QRCode",
       }
     },
 
+
+    /**
+     * Calculates BCH error correction codes
+     *
+     * Inspired by {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders}.
+     *
+     * @param data {Integer} Input data
+     * @param len {Integer} Length of <code>data</code> in bits
+     * @param gen {Integer} Generator polynomial
+     *
+     * @return {Integer} Calculated error correction code appended to the <code>data</code>
+     */
     __calculateSmallECCode : function(data, len, gen) {
       var r, g, b1, b2;
 
@@ -622,11 +800,31 @@ qx.Class.define("qrcode.QRCode",
       return (data << len) | r;
     },
 
+
+    /**
+     * Implements Galois field GF(2^8) multiplication
+     *
+     * Inspired by {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders}.
+     *
+     * @param a {Integer}
+     * @param b {Integer}
+     * @return {Integer}
+     */
     __rsMul : function(a, b) {
       var clazz = qrcode.QRCode;
       return (a && b) ? clazz.__rs_exp_tbl[clazz.__rs_log_tbl[a] + clazz.__rs_log_tbl[b]] : 0;
     },
 
+
+    /**
+     * Implements Galois field GF(2^8) polynomial multiplication
+     *
+     * Inspired by {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders}.
+     *
+     * @param p1 {Integer[]}
+     * @param p2 {Integer[]}
+     * @return {Integer[]}
+     */
     __rsPolyMod : function(p1, p2) {
       var r, c, i, j, len, len2;
 
@@ -645,13 +843,23 @@ qx.Class.define("qrcode.QRCode",
       return r.splice(-(len2-1));
     },
 
-    __rsCalculateGenerator : function(grade) {
+
+    /**
+     * Calculates Reed-Solomon generator polynomial
+     *
+     * Inspired by {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders}.
+     *
+     * @param degree {Integer} The degree of the polynomial
+     *
+     * @return {Integer[]} Generator Polynomial
+     */
+    __rsCalculateGenerator : function(degree) {
       var clazz = qrcode.QRCode;
       var r, i, j;
 
-      r = Array(grade + 1);
+      r = Array(degree + 1);
       r[0] = 1;
-      for(i = 0; i < grade; i++) {
+      for(i = 0; i < degree; i++) {
         for(j = i; j >= 0; j--) {
           r[j+1] ^= this.__rsMul(r[j], clazz.__rs_exp_tbl[i]);
         }
@@ -660,6 +868,14 @@ qx.Class.define("qrcode.QRCode",
       return r;
     },
 
+
+    /**
+     * Calculates penalty score for the given QR symbol
+     *
+     * @param symbol {Integer[]} QR symbol matrix
+     *
+     * @return {Integer} Penalty score
+     */
     __calculatePenaltyScore : function(symbol) {
       var score, i, j, k, end, c, s, seq, len;
 
