@@ -26,9 +26,9 @@
  *
  * @internal
  */
-qx.Class.define("qrcode.Segment",
+qx.Bootstrap.define("qrcode.Segment",
 {
-  extend : qx.core.Object,
+  extend : Object,
 
 
   statics :

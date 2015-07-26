@@ -23,11 +23,13 @@
  *
  * @internal
  */
-qx.Class.define("qrcode.BitBuffer",
+qx.Bootstrap.define("qrcode.BitBuffer",
 {
-  extend : qx.core.Object,
+  extend : Object,
 
-
+  /**
+   * @param len {Integer}
+   */
   construct : function(len)
   {
     this.base(arguments);

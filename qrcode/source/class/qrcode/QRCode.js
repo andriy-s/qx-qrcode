@@ -27,9 +27,9 @@
  * mode is chosen. Currently only Numeric, Alphanumeric and Byte encoding modes
  * are supported.
  */
-qx.Class.define("qrcode.QRCode",
+qx.Bootstrap.define("qrcode.QRCode",
 {
-  extend : qx.core.Object,
+  extend : Object,
 
 
   /**
