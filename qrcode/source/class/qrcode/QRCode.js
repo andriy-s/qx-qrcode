@@ -733,8 +733,11 @@ qx.Class.define("qrcode.QRCode",
      *   otherwise
      */
     __finderPattern : function(x, y) {
-      return (x == 0 || x == 6 || y == 0 || y == 6)  // Black if black border ...
-          || (x != 1 && x != 5 && y != 1 && y != 5); // ... or not white frame
+      // First check if module at (x, y) falls into the black pattern border.
+      // If it does not, then check that it does not fall into the inner light
+      // frame (which means it falls into the dark center).
+      return (x == 0 || x == 6 || y == 0 || y == 6)
+          || (x != 1 && x != 5 && y != 1 && y != 5);
     },
 
 
