@@ -39,7 +39,7 @@ qx.Class.define("qrcode.QRCode",
    *   segment is automatically added to the newly created <code>QRCode</code> instance.
    *   See {@link #addSegment}.
    * @param ecLevel {String?"M"} Error correction level. See {@link #ecLevel}.
-   *   
+   *
    */
   construct : function(str, ecLevel)
   {

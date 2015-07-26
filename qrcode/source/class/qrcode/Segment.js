@@ -165,7 +165,7 @@ qx.Class.define("qrcode.Segment",
     /**
      * Sets the target QR Symbol version
      *
-     * @param version {Integer?} QR Symbol version. 
+     * @param version {Integer?} QR Symbol version.
      */
     setVersion : function(version) {
       var clazz = qrcode.Segment;
