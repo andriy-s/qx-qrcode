@@ -52,6 +52,11 @@
   // You only need to edit the remainder of this file, if you want to customize
   // specific jobs, or add own job definitions.
 
+  "config-warnings" :
+  {
+    "job-shadowing" : [ "libraries" ]
+  },
+
   "jobs" :
   {
     // Uncomment the following entry to add a contrib or library to your
