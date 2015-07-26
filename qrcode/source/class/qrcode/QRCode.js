@@ -38,7 +38,7 @@ qx.Class.define("qrcode.QRCode",
    * @param str {String?} Data to be encoded in the QR symbol. If present, one
    *   segment is automatically added to the newly created <code>QRCode</code> instance.
    *   See {@link #addSegment}.
-   * @param ecLevel {String?"M"} Error correction level. See {@link #ecLevel}.
+   * @param ecLevel {String?"M"} Error correction level. See {@link #setECLevel}.
    *
    */
   construct : function(str, ecLevel)
@@ -52,8 +52,9 @@ qx.Class.define("qrcode.QRCode",
     if(str) {
       this.addSegment(str);
     }
-
-    this.initEcLevel(ecLevel || 'M');
+    if(ecLevel) {
+      this.setECLevel(ecLevel);
+    }
 
     if(!clazz.__rs_exp_tbl) {
       /*
@@ -320,26 +321,10 @@ qx.Class.define("qrcode.QRCode",
   },
 
 
-  properties :
-  {
-    /**
-     * Property holding the Reed-Solomon error correction level.
-     *
-     * <ul>
-     *   <li>L - allows recovery of 7% of symbol codewords</li>
-     *   <li>M - allows recovery of 15% of symbol codewords</li>
-     *   <li>Q - allows recovery of 25% of symbol codewords</li>
-     *   <li>H - allows recovery of 30% of symbol codewords</li>
-     * </ul>
-     */
-    ecLevel : { check : ['L', 'M', 'Q', 'H'], apply : "_applyEcLevel"  }
-  },
-
-
   members :
   {
     __segments : null,
-    __ecLevel : null,
+    __ecLevel : 0,
     __symbol : null,
     __symbolVersion : null,
     __symbolSize : null,
@@ -369,12 +354,29 @@ qx.Class.define("qrcode.QRCode",
     },
 
 
-    _applyEcLevel : function(value) {
+    /**
+     * Sets error correction level.
+     *
+     * Valid error correction levels are:
+     *
+     * <ul>
+     *   <li>L - allows recovery of 7% of symbol codewords</li>
+     *   <li>M - allows recovery of 15% of symbol codewords</li>
+     *   <li>Q - allows recovery of 25% of symbol codewords</li>
+     *   <li>H - allows recovery of 30% of symbol codewords</li>
+     * </ul>
+     *
+     * @param value {String} Error correction level
+     */
+    setECLevel : function(value) {
       switch(value) {
         case 'L': this.__ecLevel = 1; break;
         case 'M': this.__ecLevel = 0; break;
         case 'Q': this.__ecLevel = 3; break;
         case 'H': this.__ecLevel = 2; break;
+        default:
+          throw new Error("Invalid error correction level value '" + value +"'. " +
+            "Valid values are 'L', 'M', 'Q' and 'H'.");
       }
 
       this.__symbol = null;

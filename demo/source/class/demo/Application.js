@@ -39,7 +39,7 @@ qx.Class.define("demo.Application",
       var updateSymbol = function() {
         qr.clear();
         qr.addSegment(text.getValue());
-        qr.setEcLevel(ecLevel.getSelection()[0].getModel());
+        qr.setECLevel(ecLevel.getSelection()[0].getModel());
         canvas.set({
           width: qr.getImageSize(),
           height: qr.getImageSize()
