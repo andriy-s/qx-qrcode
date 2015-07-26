@@ -48,6 +48,7 @@ qx.Class.define("qrcode.QRCode",
 
     this.base(arguments);
 
+    this.__segments = new Array();
     if(str) {
       this.addSegment(str);
     }
@@ -337,7 +338,7 @@ qx.Class.define("qrcode.QRCode",
 
   members :
   {
-    __segments : [],
+    __segments : null,
     __ecLevel : null,
     __symbol : null,
     __symbolVersion : null,
